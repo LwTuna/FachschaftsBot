@@ -16,7 +16,7 @@ public class AssignRoleCommand implements CommandExecutor{
 	@Override
 	public void onCommand(CommandContainer commandContainer) {
 		if(commandContainer.getArgs().length == 0) {
-			handler.sendWelcomeMessage(commandContainer.getMember().getUser());
+			handler.sendWelcomeMessage(commandContainer.getMember());
 		}else {
 			for(User u : commandContainer.getMessage().getMentionedUsers()) {
 				handler.sendWelcomeMessage(u);

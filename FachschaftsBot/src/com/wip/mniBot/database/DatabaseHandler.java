@@ -56,7 +56,10 @@ public class DatabaseHandler {
 		return database.getJSONArray("users").getJSONObject(index);
 	}
 	public static UserEntry getUserEntry(JSONObject database,long id) {
-		return new UserEntry(getUserFromDatabaseByIndex(database, getIndexOfUserById(database, id)));
+		JSONObject obj = getUserFromDatabaseByIndex(database, getIndexOfUserById(database, id));
+		if(obj == null)
+			return null;
+		return new UserEntry(obj);
 	}
 	
 }

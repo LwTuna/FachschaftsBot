@@ -1,16 +1,22 @@
 package com.wip.mniBot;
 
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.json.JSONObject;
 
 import com.wip.mniBot.commands.AssignRoleCommand;
 import com.wip.mniBot.commands.CommandContainer;
 import com.wip.mniBot.commands.CommandExecutor;
+import com.wip.mniBot.commands.EmbedCommand;
 import com.wip.mniBot.commands.HelpCommand;
+import com.wip.mniBot.commands.MemberCommand;
 import com.wip.mniBot.commands.PingCommand;
+import com.wip.mniBot.database.DatabaseHandler;
+import com.wip.mniBot.database.UserEntry;
 
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
@@ -40,6 +46,9 @@ public class EventHandler extends ListenerAdapter{
 	//Instance of the Bot class used for getting constants
 	private Bot bot;
 	
+	//The User database
+	private JSONObject database;
+	
 	//Name of the Bachelor and Master Role on the Discord Server
 	private final String bachelorRoleName = "Bachelorstudent" , masterRoleName = "Masterstudent";
 	
@@ -63,11 +72,18 @@ public class EventHandler extends ListenerAdapter{
 	
 	/**
 	 * Constructor of the EventHandler class
-	 * 
+	 * Loads the JSON Database
+	 * Creates Instances of the CommandExecutors and puts it in the commands Map
 	 * @param bot used for getting constants and the jda object
 	 */
 	public EventHandler(Bot bot) {
 		this.bot = bot;
+		try {
+			database = DatabaseHandler.loadDatabaseFromFile("res/users.json");
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		commandNotFoundExecutor = new CommandExecutor() {
 			
 			@Override
@@ -83,6 +99,8 @@ public class EventHandler extends ListenerAdapter{
 		commands.put("help", new HelpCommand(this));
 		commands.put("ping", new PingCommand());
 		commands.put("assign", new AssignRoleCommand(this));
+		commands.put("embed", new EmbedCommand());
+		commands.put("members", new MemberCommand());
 	}
 
 	/**
@@ -116,7 +134,7 @@ public class EventHandler extends ListenerAdapter{
 	 */
 	@Override
 	public void onGuildMemberJoin(GuildMemberJoinEvent event) {
-		sendWelcomeMessage(event.getUser());
+		sendWelcomeMessage(event.getMember());
 	}
 	
 	/**
@@ -306,6 +324,30 @@ public class EventHandler extends ListenerAdapter{
 	 * This Method opens an async private Channel and send the User the welcome message and adds the M & B Reaction
 	 * @param user the User the message shoul be send to
 	 */
+	public void sendWelcomeMessage(Member mem) {
+		User user = mem.getUser();
+		UserEntry entry = DatabaseHandler.getUserEntry(database, user.getIdLong());
+		if(entry == null) {
+			database = DatabaseHandler.addUser(database, new UserEntry(user.getIdLong(), user.getName(), Integer.parseInt(user.getDiscriminator()), true, mem.getNickname(), UserTyp.BACHELOR.getId()));
+			try {
+				DatabaseHandler.saveDatabase(database, DatabaseHandler.defaultDatabasePath);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		user.openPrivateChannel().queue((channel) ->
+		{
+			EmbedBuilder builder = new EmbedBuilder();
+			builder.setTitle("Willkommen auf dem MNI Discord Server");
+			builder.setDescription(WELCOME_MESSAGE);
+			channel.sendMessage(builder.build()).queue((message) ->
+			{
+				message.addReaction(bUnicode).queue();
+				message.addReaction(mUnicode).queue();
+			});
+		});
+	}
+	
 	public void sendWelcomeMessage(User user) {
 		user.openPrivateChannel().queue((channel) ->
 		{
