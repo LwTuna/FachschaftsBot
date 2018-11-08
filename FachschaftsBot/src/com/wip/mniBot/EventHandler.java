@@ -166,7 +166,12 @@ public class EventHandler extends ListenerAdapter{
 			commands.getOrDefault(key, commandNotFoundExecutor).onCommand(new CommandContainer(raw, args, event.getMember(), event.getJDA(), event.getChannel(),event.getMessage()));
 		}
 	}	
-	
+	/**
+	 * This Method is called when a reaction is added to a message in a private channel
+	 * returns when the reaction is added by the bot itself
+	 * checks if the reaction is a B or M emote and calls the assignRole method with bachelor or master role
+	 * @param event Keeps information about the reaction event
+	 */
 	@Override
 	public void onPrivateMessageReactionAdd(PrivateMessageReactionAddEvent event) {
 		if(event.getUser().isBot()){
@@ -180,6 +185,12 @@ public class EventHandler extends ListenerAdapter{
 			assignRole(event.getJDA(), event.getUser(), false, true,event.getChannel());
 		}
 	}
+	/**
+	 * This Method is called when a reaction is remove to a message in a private channel
+	 * returns when the reaction is added by the bot itself
+	 * checks if the reaction is a B or M emote and calls the removeRole method with bachelor or master role
+	 * @param event Keeps information about the reaction event
+	 */
 	@Override
 	public void onPrivateMessageReactionRemove(PrivateMessageReactionRemoveEvent event) {
 		String emoteUnicode = event.getReactionEmote().getName();
@@ -191,7 +202,12 @@ public class EventHandler extends ListenerAdapter{
 			removeRole(event.getJDA(), event.getUser(), false, true,event.getChannel());
 		}
 	}
-	
+	/**
+	 * This Method is called when a message is send in private channel
+	 * returns when the reaction is added by the bot itself
+	 * checks if the message is a B/Bacherlor or M/Master emote and calls the assignRole method with bachelor or master role
+	 * @param event Keeps information about the reaction event
+	 */
 	@Override
 	public void onPrivateMessageReceived(PrivateMessageReceivedEvent event) {
 		if(event.getAuthor().isBot()) {
@@ -348,6 +364,11 @@ public class EventHandler extends ListenerAdapter{
 		});
 	}
 	
+	/**
+	 * Opens a PrivateMessage channel and send the Welcome message as an embeded Text
+	 * When Send adds a B and M emote to the Message
+	 * @param user the User the welcome message should be send to
+	 */
 	public void sendWelcomeMessage(User user) {
 		user.openPrivateChannel().queue((channel) ->
 		{
